@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Domain.Entities;
 using MassTransit;
 using MassTransit.Transports;
 using Microsoft.Extensions.Configuration;
@@ -22,10 +23,10 @@ namespace Infrastructure.Messaging.Producers
             _cfg = cfg;
         }
 
-        public async Task UserCreatedSend(UserDto user)
+        public async Task UserCreatedSend(UserCreatedEvent user)
         {
             var endpoint = await _sendEndpointProvider.GetSendEndpoint(
-                    new Uri($"queue:{_cfg["RabbitMQ:Queues:FCG"]}"));
+                    new Uri($"queue:{_cfg["RabbitMQ:Queues:FCG_User"]}"));
 
             await endpoint.Send(user);
         }        

@@ -3,17 +3,17 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /app
 
-COPY ["/UserAPI-Microservice/UsersAPI/UsersAPI.csproj", "UsersAPI/"]
-COPY ["/UserAPI-Microservice/Application/Application.csproj", "Application/"]
-COPY ["/UserAPI-Microservice/Domain/Domain.csproj", "Domain/"]
-COPY ["/UserAPI-Microservice/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
+COPY ["/UserAPI-master/UsersAPI/UsersAPI.csproj", "UsersAPI/"]
+COPY ["/UserAPI-master/Application/Application.csproj", "Application/"]
+COPY ["/UserAPI-master/Domain/Domain.csproj", "Domain/"]
+COPY ["/UserAPI-master/Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 
 RUN dotnet restore "UsersAPI/UsersAPI.csproj"
 
 
 COPY . .
 
-RUN dotnet publish "UserAPI-Microservice/UsersAPI/UsersAPI.csproj" -c Release -o /app/publish
+RUN dotnet publish "UserAPI-master/UsersAPI/UsersAPI.csproj" -c Release -o /app/publish
 
 
 # Stage 2

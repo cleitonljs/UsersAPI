@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,14 +17,21 @@ namespace UsersAPI.Controllers
         { 
             try
             {
-                testaHabbitService.EnviaMensagem(userDto);
+                var _event = new UserCreatedEvent()
+                {
+                    Nome = userDto.Nome,
+                    Email = userDto.Email
+                };
+
+                //testaHabbitService.EnviaMensagem(userDto);
+                testaHabbitService.EnviaMensagem(_event);
                 
                 var saida = new {
                     Nome = userDto.Nome,
                     Email = userDto.Email,
                     RabbitMQHost = configuration["RabbitMQ:Host"],
                     RabbitMQPort = configuration["RabbitMQ:Port"],
-                    RabbitMQQueue= $"queue:{configuration["RabbitMQ:Queues:FCG"]}",
+                    RabbitMQQueue= $"queue:{configuration["RabbitMQ:FCG_User"]}",
                     Msg= "Mensagem enviada com sucesso!"
                 };
                 return Ok(saida);

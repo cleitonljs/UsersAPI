@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace Application.Interfaces
 {
     public interface IUserCreatedProducer
     {
-        Task UserCreatedSend(UserDto user);
+        Task UserCreatedSend(UserCreatedEvent user);
     }
 }

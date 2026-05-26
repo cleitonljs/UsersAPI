@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.Interfaces;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Application.Services
 {
     public class TestaHabbitService(IUserCreatedProducer userCreatedProducer) : ITestaHabbitService
     {
-        public void EnviaMensagem(UserDto userDto)
+        public void EnviaMensagem(UserCreatedEvent userDto)
         {
             userCreatedProducer.UserCreatedSend(userDto);
         }
