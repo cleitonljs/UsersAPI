@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Application.Services
 {
-    public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IPasswordService passwordService) : IUserService
+    public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IPasswordService passwordService, IUserCreatedProducer userCreatedProducer) : IUserService
     {
         public bool ValidaEmail(string email)
         {
@@ -50,6 +50,15 @@ namespace Application.Services
             var UserCriado = await unitOfWork.Users.AdicionarAsync(usu);
 
             await unitOfWork.SaveChangesAsync();
+
+            var evento = new UserCreatedEvent()
+            {
+                Nome = UserCriado.Nome,
+                Email = UserCriado.Email
+            };
+
+            await userCreatedProducer.UserCreatedSend(evento);
+
             return UserCriado;
         }
 
