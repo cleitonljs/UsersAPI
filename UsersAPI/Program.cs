@@ -136,7 +136,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IUserCreatedProducer, UserCreatedProducer>();
-builder.Services.AddScoped<ITestaHabbitService, TestaHabbitService>();
 builder.Services.AddScoped<IAutenticacaoService, AutenticacaoService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 
