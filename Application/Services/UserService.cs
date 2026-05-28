@@ -2,6 +2,7 @@
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Events;
 using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
