@@ -11,7 +11,7 @@ para conectar no mysql via dbbeaver:
 	na janela de conexão: driver properties, marcar allowPublicKeyRetrieval = true
 	
 Iniciar container do rabbit no docker:
-	docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+	docker run -d --hostname my-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
 Abrir painel do rabbit:
 	http://localhost:15672
@@ -21,3 +21,7 @@ Criar migration do EF:
 
 Executar a migration do EF:
 	dotnet ef database update --project .\Infrastructure\Infrastructure.csproj --startup-project .\UsersAPI\UsersAPI.csproj
+	
+Usuário:
+    Email: admin@email.com
+    Senha: "1234@Abc"
