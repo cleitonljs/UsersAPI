@@ -21,7 +21,16 @@ Criar migration do EF:
 
 Executar a migration do EF:
 	dotnet ef database update --project .\Infrastructure\Infrastructure.csproj --startup-project .\UsersAPI\UsersAPI.csproj
-	
-Usuário:
+
+Usuário da aplicação UsersAPI:
     Email: admin@email.com
     Senha: "1234@Abc"
+	
+Criar imagem da api para Docker:
+	docker build -t users-api:1.0 .
+	
+Executar imagem:
+	docker run -p 8080:8080 users-api:1.2
+	
+Abrir a aplicação:
+	http://localhost:8080/swagger/index.html
