@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Context;
+using Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,37 +13,40 @@ namespace Infrastructure.Repositories
 {
     public class UserRepository(FCGDbContext dbContext) : IUserRepository
     {
+        private const string Entity = "User";
 
-        public async Task<User> AdicionarAsync(User entidade)
-        {
-            var retorno = await dbContext.Users.AddAsync(entidade);
+        public Task<User> AdicionarAsync(User entidade) =>
+            DatabaseMetrics.TrackAsync(nameof(UserRepository) + "." + nameof(AdicionarAsync), Entity, async () =>
+            {
+                var retorno = await dbContext.Users.AddAsync(entidade);
 
-            return retorno.Entity;
-        }
+                return retorno.Entity;
+            });
 
-        public async Task Atualizar(User User)
-        {
-            dbContext.Users.Update(User);
-        }
+        public Task Atualizar(User User) =>
+            DatabaseMetrics.TrackAsync(nameof(UserRepository) + "." + nameof(Atualizar), Entity, () =>
+            {
+                dbContext.Users.Update(User);
+                return Task.CompletedTask;
+            });
 
-        public async Task DeletarAsync(User User)
-        {
-            dbContext.Users.Remove(User);
-        }
+        public Task DeletarAsync(User User) =>
+            DatabaseMetrics.TrackAsync(nameof(UserRepository) + "." + nameof(DeletarAsync), Entity, () =>
+            {
+                dbContext.Users.Remove(User);
+                return Task.CompletedTask;
+            });
 
-        public async Task<User> ObterPorEmailAsync(string email)
-        {
-            return await dbContext.Users.FirstOrDefaultAsync(u => u.Email == email);
-        }
+        public Task<User> ObterPorEmailAsync(string email) =>
+            DatabaseMetrics.TrackAsync(nameof(UserRepository) + "." + nameof(ObterPorEmailAsync), Entity, () =>
+                dbContext.Users.FirstOrDefaultAsync(u => u.Email == email));
 
-        public async Task<User> ObterPorIdAsync(long id)
-        {
-            return await dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
-        }
+        public Task<User> ObterPorIdAsync(long id) =>
+            DatabaseMetrics.TrackAsync(nameof(UserRepository) + "." + nameof(ObterPorIdAsync), Entity, () =>
+                dbContext.Users.FirstOrDefaultAsync(u => u.Id == id));
 
-        public async Task<IEnumerable<User>> ObterTodosAsync()
-        {
-            return await dbContext.Users.ToListAsync();
-        }
+        public Task<IEnumerable<User>> ObterTodosAsync() =>
+            DatabaseMetrics.TrackAsync(nameof(UserRepository) + "." + nameof(ObterTodosAsync), Entity, async () =>
+                (IEnumerable<User>)await dbContext.Users.ToListAsync());
     }
 }
