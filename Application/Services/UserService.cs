@@ -1,4 +1,4 @@
-﻿using Application.DTOs;
+using Application.DTOs;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
@@ -13,8 +13,11 @@ using System.Threading.Tasks;
 
 namespace Application.Services
 {
-    public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IPasswordService passwordService, IUserCreatedProducer userCreatedProducer) : IUserService
+    public class UserService(IUnitOfWork unitOfWork, IMapper mapper, IPasswordService passwordService, IUserCreatedProducer userCreatedProducer, ICacheService cacheService) : IUserService
     {
+        private const string ChaveListaTodos = "users:todos";
+        private static string ChaveUsuario(int id) => $"users:usuario:{id}";
+
         public bool ValidaEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -52,6 +55,8 @@ namespace Application.Services
 
             await unitOfWork.SaveChangesAsync();
 
+            await cacheService.RemoverAsync(ChaveListaTodos);
+
             var evento = new UserCreatedEvent()
             {
                 Nome = UserCriado.Nome,
@@ -65,12 +70,32 @@ namespace Application.Services
 
         public async Task<IEnumerable<User>> ObterTodosAsync()
         {
-            return await unitOfWork.Users.ObterTodosAsync();
+            var emCache = await cacheService.ObterAsync<List<User>>(ChaveListaTodos);
+            if (emCache != null)
+                return emCache;
+
+            var usuarios = await unitOfWork.Users.ObterTodosAsync();
+            var lista = usuarios.ToList();
+
+            await cacheService.DefinirAsync(ChaveListaTodos, lista, TimeSpan.FromSeconds(60));
+
+            return lista;
         }
 
         public async Task<User> ObterPorIdAsync(int id)
         {
-            return await unitOfWork.Users.ObterPorIdAsync(id);
+            var chave = ChaveUsuario(id);
+
+            var emCache = await cacheService.ObterAsync<User>(chave);
+            if (emCache != null)
+                return emCache;
+
+            var usuario = await unitOfWork.Users.ObterPorIdAsync(id);
+
+            if (usuario != null)
+                await cacheService.DefinirAsync(chave, usuario, TimeSpan.FromSeconds(60));
+
+            return usuario;
         }
 
         public async Task AtualizarAsync(UserUpdateRequest entidade)
@@ -83,6 +108,9 @@ namespace Application.Services
             await unitOfWork.Users.Atualizar(User);
 
             await unitOfWork.SaveChangesAsync();
+
+            await cacheService.RemoverAsync(ChaveListaTodos);
+            await cacheService.RemoverAsync(ChaveUsuario(entidade.Id));
         }
 
         public async Task DeletarAsync(int id)
@@ -92,6 +120,9 @@ namespace Application.Services
             await unitOfWork.Users.DeletarAsync(User);
 
             await unitOfWork.SaveChangesAsync();
+
+            await cacheService.RemoverAsync(ChaveListaTodos);
+            await cacheService.RemoverAsync(ChaveUsuario(id));
         }
     }
 }
