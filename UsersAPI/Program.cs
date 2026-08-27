@@ -7,6 +7,7 @@ using Infrastructure;
 using Infrastructure.Cache;
 using Infrastructure.Context;
 using Infrastructure.Messaging.Producers;
+using Infrastructure.Observability;
 using Infrastructure.Nosql;
 using Infrastructure.Repositories;
 using Infrastructure.Services;
@@ -15,6 +16,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using MySqlConnector;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,7 +77,30 @@ builder.Services.AddDbContext<FCGDbContext>(options =>
     options.UseMySql(
         connectionString,
         ServerVersion.AutoDetect(connectionString));
+
+    options.AddInterceptors(new DatabaseConnectionMetricsInterceptor());
 });
+
+DatabaseMetrics.ConfigureMaxPoolSize((int)new MySqlConnectionStringBuilder(
+    builder.Configuration.GetConnectionString("DefaultConnection")!).MaximumPoolSize);
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(serviceName: "UsersAPI"))
+    .WithMetrics(metrics => metrics
+        .AddMeter(DatabaseMetrics.MeterName)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddRuntimeInstrumentation()
+        .AddProcessInstrumentation()
+        // Buckets em escala de segundos: o padrão do SDK assume durações em milissegundos
+        // e deixaria toda query real (sub-segundo) no primeiro bucket, inutilizando o P95/P99.
+        .AddView(
+            instrumentName: "db_query_duration_seconds",
+            new ExplicitBucketHistogramConfiguration
+            {
+                Boundaries = [0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10]
+            })
+        .AddPrometheusExporter());
 
 // =========================================
 // MongoDB (item 4, Fase 3 — perfil estendido de usuário)
@@ -175,9 +202,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseSwagger();
-app.UseSwaggerUI();
+app.MapPrometheusScrapingEndpoint("/metrics");
 
 using (var scope = app.Services.CreateScope())
 {
